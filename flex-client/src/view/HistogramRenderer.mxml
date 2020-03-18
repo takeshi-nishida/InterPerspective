@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+                xmlns:s="library://ns.adobe.com/flex/spark" 
+                xmlns:mx="library://ns.adobe.com/flex/mx" 
+                autoDrawBackground="false" click="clicked(event)" hitArea="{g}">
+    
+    <fx:Declarations>
+        <s:SolidColorStroke id="labelBorderStroke" color="0x000000" weight="2" />
+        <s:SolidColorStroke id="currentStroke" weight="2" />
+        <s:SolidColor id="solidFill" color="{currentStroke.color}" />
+
+        <fx:uint id="blue">0x6666ff</fx:uint>
+        <fx:uint id="green">0x66ff66</fx:uint>
+        <fx:uint id="red">0xff6666</fx:uint>
+    </fx:Declarations>
+    
+    <s:Group id="g">
+        <s:Rect id="rect" left="0" right="0" top="0" bottom="0" radiusX="4" fill="{solidFill}" stroke="{labelBorderStroke}" />
+        <s:Label id="l" left="4" right="4" top="4" bottom="4" lineBreak="explicit" />
+    </s:Group>
+    
+    <fx:Script>
+        <![CDATA[
+            import model.User;
+            
+            import mx.graphics.IFill;
+            
+            override public function set data(o : Object) : void {
+                super.data = o;
+                if(o && o is User){
+                    var user:User = o as User;
+                    var title:String = user.title;
+                    var position:int = (user.position - 1) / 10;
+                    
+                    // label
+                    l.text = title ? title : user.name;
+                    l.validateSize();
+                    g.toolTip = title ?  user.name + ": " + title : user.name;
+                    g.width = parent.width / 10;
+                    g.height = l.measuredHeight + 8;
+                    g.x = g.width * position;
+//                    g.y = parent.height - g.height * user.histogramPosition;
+                    g.y = g.height * (user.histogramPosition - 1);
+                    
+                    // color
+                    currentStroke.color = user.hasChangedPosition ? changeToColor(user.change) : green;
+                    
+                }
+            }
+            
+
+            protected function clicked(event:MouseEvent):void
+            {
+                if(data && data is User){
+                    var user:User = data as User;
+                    dispatchEvent(new RoomEvent(RoomEvent.DISPLAY_LOG, user.room));
+                }
+            }
+            
+            private function changeToColor(change:int) : uint {
+                return change > 0 ? red : blue;
+            }
+        ]]>
+    </fx:Script>        
+    
+</s:ItemRenderer>

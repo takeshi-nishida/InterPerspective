@@ -1,0 +1,9 @@
+<% @page_title = @topic.title %>
+
+<%= link_to 'トピック一覧', topics_url %>
+
+<% if current_user then -%>
+<%= button_to 'このトピックに参加する', participate_topic_url(@topic) %>
+<% else -%>
+<p>このトピックに参加するには <%= link_to 'ログイン', new_user_session_url %> する必要があります。</p>
+<% end -%>

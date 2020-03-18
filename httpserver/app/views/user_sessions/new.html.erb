@@ -1,0 +1,20 @@
+<% @page_title = 'ログイン' %>
+
+<p>※初めて利用する方は先に <%= link_to 'ユーザ登録', new_user_url %> を行う必要があります。</p>
+
+<%= form_for @user_session do |f| %>
+
+
+
+  <div class="field">
+    <%= f.label :login %>（チャットで使用する名前）<br />
+    <%= f.text_field :login %>
+  </div>
+  <div class="field">
+    <%= f.label :password %><br />
+    <%= f.password_field :password %>
+  </div>
+  <div class="actions">
+    <%= f.submit 'ログイン' %>
+  </div>
+<% end %>

@@ -1,0 +1,11 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  participation: 
+  position: 1
+  title: MyString
+
+two:
+  participation: 
+  position: 1
+  title: MyString

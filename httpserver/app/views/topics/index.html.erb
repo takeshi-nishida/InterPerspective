@@ -1,0 +1,17 @@
+<% @page_title = "InterPerspective" %>
+
+<%= link_to "Create new topic", new_topic_url  %>
+
+<h2>トピック一覧</h2>
+<table>
+  <tr><th>議題</th><th>議論の軸</th><th>１部屋の人数</th><th>１部屋の時間</th><th>ログ</th></tr>
+<% @topics.each { |topic| -%>
+  <tr>
+    <td><%=  link_to topic.title, topic_url(topic) %></td>
+    <td><%= topic.left %> 対 <%= topic.right %></td>
+    <td><%= topic.min_roomsize %> ～ <%= topic.max_roomsize %>人</td>
+    <td><%= topic.roomtime %> 分</td>
+    <td><%=  link_to 'log', log_topic_url(topic) %></td>
+  </tr>
+<% } -%>
+</table>

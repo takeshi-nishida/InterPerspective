@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+                xmlns:s="library://ns.adobe.com/flex/spark" 
+                xmlns:mx="library://ns.adobe.com/flex/mx" 
+                autoDrawBackground="false" hitArea="{g}">
+    
+    <fx:Declarations>
+        <s:SolidColorStroke id="labelBorderStroke" color="0x000000" weight="2" />
+        <s:SolidColorStroke id="currentStroke" weight="2" />
+        <s:SolidColor id="solidFill" color="{currentStroke.color}" />        
+                
+        <fx:Array id="colors">
+            <fx:uint>0x6666ff</fx:uint> <!-- blue -->
+            <fx:uint>0x66ffff</fx:uint> <!-- light blue -->
+            <fx:uint>0x66ff66</fx:uint> <!-- green -->
+            <fx:uint>0xffff66</fx:uint> <!-- yellow -->
+            <fx:uint>0xff6666</fx:uint> <!-- red -->
+            <fx:uint>0xff3333</fx:uint> <!-- very red -->
+        </fx:Array>
+        
+        <fx:int id="baseLength">2000</fx:int>
+        
+        <s:Animate id="animate" repeatCount="0" repeatBehavior="loop" target="{this}">
+            <s:MotionPath property="depth">
+                <s:Keyframe time="0" value="1" />
+                <s:Keyframe time="0" value="2" />
+                <s:Keyframe time="{baseLength}" value="2" />
+                <s:Keyframe time="{baseLength}" value="1" />
+            </s:MotionPath>
+        </s:Animate>
+    </fx:Declarations>
+    
+    <s:Graphic id="arrow" y="0" width="300" height="30">
+        <s:Path id="arrowBody" data="M 0 30 C 50 0 250 0 300 30" stroke="{currentStroke}" />
+    </s:Graphic>
+    
+    <s:Ellipse id="arrowTail" y="2" width="10" height="10" fill="{solidFill}" />
+    
+    <s:Group id="g">
+        <s:Rect id="rect" left="0" right="0" top="0" bottom="0" radiusX="4" fill="{solidFill}" stroke="{labelBorderStroke}" />
+        <s:Label id="l" left="4" right="4" top="4" bottom="4" lineBreak="explicit" />
+    </s:Group>
+
+    <fx:Script>
+        <![CDATA[
+            import model.User;
+                        
+            import spark.components.DataGroup;
+                        
+            override public function set data(o : Object) : void {
+                super.data = o;
+                if(o && o is User){
+                    var user:User = o as User;
+                    var title:String = user.title;
+                    var position:int = user.position;
+                    var itemLength:int = (owner as DataGroup).dataProvider.length;
+                    
+                    // label
+                    if(itemLength < 20){
+                        l.text = title ? title : user.name;
+                    }
+                    else{
+                        l.text = "...";
+                    }
+                    l.validateSize();
+                    g.toolTip = title ? user.name + ": " + title : user.name;
+                    g.width = l.measuredWidth + 8;
+                    g.height = l.measuredHeight + 8;
+                    g.x = parent.width * position / 100 - g.width / 2;
+                    g.x = Math.max(g.x, 0);
+                    g.x = Math.min(g.x, parent.width - g.width);
+                    g.y = parent.height - g.height;
+
+                    // color
+                    currentStroke.color = scoreToColor(user.lineScore);
+                    
+                    // arrow
+                    arrow.visible = arrowTail.visible = user.hasChangedPosition;
+                    if(user.hasChangedPosition){
+                        var w:int = parent.width * user.change / 100;
+                        var toX:int = g.x + g.width / 2;
+                        arrow.width = Math.abs(w);
+                        arrow.x = w > 0 ? toX - w: toX;
+                        arrow.y = g.y + g.height / 2 - arrow.height;
+                        arrowTail.x = toX - w - arrowTail.width / 2;
+                        arrowTail.y = g.y + (g.height - arrowTail.height) / 2;
+                        arrow.validateNow();
+                    }
+                    
+                    // animation
+                    animate.startDelay = itemIndex * baseLength;
+                    animate.duration = itemLength * baseLength;
+                    animate.play();
+                }
+            }
+            
+            private function scoreToColor(score:Number) : uint {
+                var i:int = (int) ((score + 1) * 2);
+                i = i > 0 ? i + 1 : 0;
+                i = Math.min(i, colors.length - 1);
+                return colors[i];
+            }
+        ]]>
+    </fx:Script>
+</s:ItemRenderer>

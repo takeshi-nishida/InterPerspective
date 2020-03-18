@@ -1,0 +1,8 @@
+<rooms>
+  <% @rooms.each{|room|
+    if room.users.size >= room.topic.min_roomsize -%>
+  <room id="<%= room.id %>">
+  <%=  render :partial => 'shared/participation', :collection => room.participations %>
+  </room>
+  <% end } -%>
+</rooms>

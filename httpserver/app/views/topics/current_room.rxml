@@ -1,0 +1,10 @@
+if(@room) then
+  xml.room(:id => @room.id){
+    xml.finish_at(@room.finish_at.strftime("%a %b %d %H:%M:%S GMT%z %Y"))
+    xml.topic(:id => @room.topic_id)
+    xml.participation(:id => @participation.id)
+    xml.attitude(@attitude.title, :position => @attitude.position)  if @attitude
+  }
+else
+  xml.room
+end

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+                xmlns:s="library://ns.adobe.com/flex/spark" 
+                xmlns:mx="library://ns.adobe.com/flex/mx" 
+                autoDrawBackground="true" height="36" click="clicked(event)" resize="resized(event)">
+    
+    <s:layout>
+        <s:HorizontalLayout verticalAlign="middle" />
+    </s:layout>
+            
+    <s:DataGroup id="roomUsers" itemRenderer="view.UserAttitudeRenderer" height="40">
+        <s:layout>
+            <s:BasicLayout/>
+        </s:layout>
+    </s:DataGroup>
+
+    <fx:Script>
+        <![CDATA[
+            import model.Room;
+            
+            import mx.events.ResizeEvent;
+                        
+            override public function set data(o : Object) : void {
+                super.data = o;
+                if(o && o is Room){
+                    var room:Room = o as Room;
+                    roomUsers.dataProvider = room.users;
+                    roomUsers.width = parent.width;
+                    roomUsers.height = 36;
+                    width = parent.width;
+                    height = roomUsers.height;
+                    
+                    this.toolTip = "部屋" + room.id + "の議論を見るにはクリック！";
+                }
+            }
+            
+
+            protected function clicked(event:MouseEvent):void
+            {
+                if(data && data is Room){
+                    dispatchEvent(new RoomEvent(RoomEvent.DISPLAY_LOG, data as Room));
+                }
+            }
+
+
+            protected function resized(event:ResizeEvent):void
+            {
+                roomUsers.width = parent.width;
+            }
+        ]]>
+    </fx:Script>
+    
+</s:ItemRenderer>

@@ -1,0 +1,9 @@
+# Deprecated (users.xml.erb is used).
+xml.users{
+  @room.participations.each{|p|
+    xml.user(:id => p.id){
+      xml.name(p.user.login)
+      xml.attitude(p.current_attitude.title, :position => p.current_attitude.position)  if p.current_attitude
+    }
+  }
+}

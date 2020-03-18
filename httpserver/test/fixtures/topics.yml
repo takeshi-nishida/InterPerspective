@@ -1,0 +1,17 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  title: MyString
+  left: MyString
+  right: MyString
+  min_roomsize: 1
+  max_roomsize: 1
+  roomtime: 1
+
+two:
+  title: MyString
+  left: MyString
+  right: MyString
+  min_roomsize: 1
+  max_roomsize: 1
+  roomtime: 1

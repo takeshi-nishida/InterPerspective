@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+               xmlns:s="library://ns.adobe.com/flex/spark" 
+               xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="955" minHeight="600"
+               xmlns:ui4="ui4.*"
+               creationComplete="onCreationComplete()" fontSize="14" xmlns:view="view.*">
+    
+    <fx:Declarations>
+        <fx:Date id="roomFinishTime" />
+        <fx:String id="rootPath" />
+        <fx:String id="roomPath" />
+        <fx:String id="participationID" />
+
+        <s:ArrayCollection id="colors">
+            <fx:uint>0x6666ff</fx:uint> <!-- blue -->
+            <fx:uint>0x66ffff</fx:uint> <!-- light blue -->
+            <fx:uint>0x66ff66</fx:uint> <!-- green -->
+            <fx:uint>0xffff66</fx:uint> <!-- yellow -->
+            <fx:uint>0xff6666</fx:uint> <!-- red -->
+            <fx:uint>0xff3333</fx:uint> <!-- very red -->
+        </s:ArrayCollection>
+
+        <!-- POST services -->
+        <s:HTTPService id="postParticipateService" method="POST" url="{rootPath}/participate.xml" result="onRoomLoaded(event)" showBusyCursor="true" concurrency="single" />
+        <s:HTTPService id="postAttitudeService" method="POST" url="{roomPath}/express_attitude.xml" showBusyCursor="true" concurrency="single" />
+        <s:HTTPService id="postMessageService" method="POST" url="{roomPath}/speak.xml" showBusyCursor="true" concurrency="single" />
+        
+        <!-- GET services -->
+        <s:HTTPService id="getRoomService" method="GET" url="{rootPath}/current_room.xml" result="onRoomLoaded(event)" />
+        <s:HTTPService id="getDemoRoomService" method="GET" url="{rootPath}/demo_room.xml" result="onDemoRoomLoaded(event)" />
+        <s:HTTPService id="getResultsService" method="GET" url="{rootPath}/results.xml" resultFormat="e4x" result="onResultsLoaded(event)" />
+        <s:HTTPService id="getRoomFinishTimeService" method="GET" url="{roomPath}/finish_time.xml" result="onRoomFinishTimeLoaded(event)" />
+        <s:HTTPService id="getRoomMessagesService" method="GET" url="{roomPath}/messages.xml" resultFormat="e4x" result="onMessagesLoaded(event)" />
+        <s:HTTPService id="getRoomUsersService" method="GET" url="{roomPath}/users.xml" resultFormat="e4x" result="onRoomUsersLoaded(event)" />
+        
+    </fx:Declarations>
+    
+    <fx:Script source="Control.as" />
+    
+    <s:states>
+        <s:State name="default" stateGroups="silentGroup, beforeGroup" />
+        <s:State name="lobby" stateGroups="silentGroup, beforeGroup" />
+        <s:State name="startup" stateGroups="talkingGroup" enterState="showAttitudeForm()" />
+        <s:State name="room" stateGroups="talkingGroup" />
+        <s:State name="timeup" stateGroups="silentGroup" enterState="showAttitudeForm()" />
+        <s:State name="readOnly" stateGroups="silentGroup" />
+    </s:states>
+    
+    <s:HGroup left="10" right="10" bottom="10" top="10">
+        <!-- Right (= navigation) area -->
+        <s:VGroup width="300" height="100%">
+            <s:Label width="100%">この部屋の議題は「{FlexGlobals.topLevelApplication.parameters.title}」です。</s:Label>
+            <s:Group width="100%">
+                <s:Rect width="100%" height="100%">
+                    <s:fill>
+                        <s:SolidColor color.beforeGroup="0xff8f8f" color.talkingGroup="0x8fff8f" color.timeup="0x8f8fff" color.readOnly="0xff8f8f" />
+                    </s:fill>
+                </s:Rect>
+                <s:Label id="notice" width="100%" paddingBottom="4" paddingLeft="4" paddingRight="4" paddingTop="4"
+                         text.beforeGroup="現在、議論に参加していません"
+                         text.talkingGroup="現在、議論に参加中です"
+                         text.timeup="お疲れ様でした。他の人とも議論すると視野が広がるかもしれません。"
+                         text.readOnly="現在ログインしていません。ログインしていなくても「部屋リスト」と「意見の分布」を見ることはできます。議論に参加したい場合はブラウザの戻るボタンで戻ってログインしてください。" />
+            </s:Group>
+            
+            <s:Button click="postParticipate()" enabled.beforeGroup="true" enabled.talkingGroup="false" enabled.readOnly="false"
+                      label="参加する" label.timeup="もう一度参加する" />
+            
+            <mx:LinkBar dataProvider="{contentStack}" direction="vertical" height="100%" />
+            <s:Button click="{getDemoRoomService.send()}" enabled="true" enabled.talkingGroup="false">Load DEMO</s:Button>
+        </s:VGroup>
+        
+        <!-- Left (= content) area -->
+        <s:VGroup id="contentArea" width="100%" height="100%" >
+            <s:Label text="参加中の部屋の意見分布" text.beforeGroup="参加中の部屋の意見分布（今は参加していません）" />            
+            <s:HGroup width="100%" verticalAlign="bottom">
+                <s:Label text="{FlexGlobals.topLevelApplication.parameters.left}" />
+                <s:VGroup width="100%">
+                    <s:DataGroup id="roomUsers" width="100%" height="50" dataProvider="{chatModel.currentRoom.users}" itemRenderer="view.UserAttitudeRenderer" />
+                    <view:HArrow width="100%" />
+                </s:VGroup>
+                <s:Label text="{FlexGlobals.topLevelApplication.parameters.right}" />
+            </s:HGroup>
+            
+            <mx:ViewStack id="contentStack" width="100%" height="100%"
+                          selectedChild.beforeGroup="{allView}" selectedChild.talkingGroup="{chatView}">
+                <s:NavigatorContent id="allView" label="部屋リストを見る">
+                    <s:VGroup width="100%" height="100%">
+                        <s:HGroup width="100%">
+                            <s:Label width="100%">部屋リスト（クリックすると議論の内容が別ページに開きます）</s:Label>
+                            <s:Label>色は発言回数に対応 少ない</s:Label>
+                            <s:DataGroup dataProvider="{colors}" right="0">
+                                <s:layout><s:HorizontalLayout /></s:layout>
+                                <s:itemRenderer>
+                                    <fx:Component>
+                                        <s:ItemRenderer>                          
+                                            <s:Rect width="12" height="12"><s:fill><s:SolidColor color="{data}" /></s:fill></s:Rect>
+                                        </s:ItemRenderer>
+                                    </fx:Component>
+                                </s:itemRenderer>
+                            </s:DataGroup>                            
+                            <s:Label right="0">多い</s:Label>
+                        </s:HGroup>
+                        <s:ButtonBar dataProvider="{chatModel.sortFields}" change="setSort(event)" labelFunction="labelForSortField" />
+                        <s:Group width="100%" height="100%">
+                            <s:List id="resultsList" width="100%" height="100%" itemRenderer="view.RoomResultRenderer" allowMultipleSelection="false"
+                                    dataProvider="{chatModel.rooms}" alternatingItemColors="[#ffffff,#f0f0f0]">
+                                <s:layout>
+                                    <s:VerticalLayout />
+                                </s:layout>
+                            </s:List>
+                            <s:Line x="{resultsList.width * chatModel.averagePosition /100}" height="100%">
+                                <s:stroke>
+                                    <s:SolidColorStroke color="0x8fff8f" weight="2" />
+                                </s:stroke>
+                            </s:Line>
+                        </s:Group>
+                    </s:VGroup>
+                </s:NavigatorContent>
+                
+                <s:NavigatorContent id="histogramView" label="立ち位置の分布を見る">
+                    <s:HGroup width="100%" height="100%">
+                        <s:VGroup height="100%" horizontalAlign="center">
+                            <s:RichText text="発言が多い" blockProgression="rl" />
+                            <view:VArrow height="100%" />
+                            <s:RichText text="少ない" blockProgression="rl" />
+                        </s:VGroup>
+                        <s:VGroup>
+                            <s:HGroup horizontalAlign="center" verticalAlign="middle" width="100%">
+                                <s:Label>色は意見の変化に対応: {chatModel.changedToLeft}人</s:Label>
+                                <view:HArrow width="50" rightHead="false" fillColor="0x6666ff" />
+                                <s:Rect width="12" height="12"><s:fill><s:SolidColor color="0x66ff66" /></s:fill></s:Rect>
+                                <s:Label>{chatModel.unchanged}人</s:Label>
+                                <view:HArrow width="50" leftHead="false" fillColor="0xff6666" />
+                                <s:Label>{chatModel.changedToRight}人</s:Label>
+                            </s:HGroup>
+                            <s:Scroller>
+                                <s:DataGroup id="histogram" dataProvider="{chatModel.users}" itemRenderer="view.HistogramRenderer"
+                                             width="{contentStack.width - 20}" height="{contentStack.height - 10}">
+                                    <s:layout>
+                                        <s:BasicLayout clipAndEnableScrolling="true" />
+                                    </s:layout>
+                                </s:DataGroup>
+                            </s:Scroller>                                                                                
+                        </s:VGroup>
+                    </s:HGroup>
+                </s:NavigatorContent>
+                
+                <s:NavigatorContent id="chatView" label="自分が参加している議論を見る" enabled="true" enabled.readOnly="false">
+                    <s:VGroup  width="100%" height="100%">
+                        <s:Label text.beforeGroup="参加中の議論（今は参加していません）" text.talkingGroup="参加中の議論" text.timeup="参加した議論" /> 
+                        <ui4:LogList id="messageList" width="100%" height="100%" dataProvider="{chatModel.messages}"
+                                     itemRenderer="view.MessageRenderer" autoScroll="{autoScroll.selected}" alternatingItemColors="[#FFFFFF, #F0F0F0]" />
+                        <s:Label id="countdown" text.timeup="タイムアップ！" />
+                        <s:TextInput id="messageTextArea" width="100%" enter="postMessage()"
+                                     enabled.talkingGroup="true" enabled.silentGroup="false"/>
+                        <s:HGroup width="100%">
+                            <s:CheckBox id="autoScroll" label="発言リストを自動的にスクロールする" selected="true" />
+                            <mx:Spacer width="100%" />
+                            <s:Button label="立ち位置変更ダイアログを開く" click="showAttitudeForm()"
+                                      enabled.talkingGroup="true" enabled.silentGroup="false" />
+                            <s:Button id="sendMessageButton" label="発言する" click="postMessage()"
+                                      enabled.talkingGroup="true" />
+                        </s:HGroup>                        
+                    </s:VGroup>                    
+                </s:NavigatorContent>
+            </mx:ViewStack>
+        </s:VGroup>
+    </s:HGroup>
+</s:Application>

@@ -1,0 +1,3 @@
+xml.room{
+  xml.finish_at(@room.finish_at.strftime("%a %b %d %H:%M:%S GMT%z %Y"))
+}

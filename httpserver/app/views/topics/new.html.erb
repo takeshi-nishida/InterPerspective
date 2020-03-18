@@ -1,0 +1,10 @@
+<% @page_title = "Create topic"  %>
+
+<% form_for @topic do |f| -%>
+  <!-- <%= f.error_messages %> TODO: learn how to validation in rails 3 -->
+  トピック <%= f.text_field :title %> (<%= f.text_field :left %> vs. <%= f.text_field :right %>)<br/>
+  １部屋の人数 <%= f.text_field :min_roomsize %> ～ <%= f.text_field :max_roomsize %> 人 <br/>
+  １部屋の時間 <%= f.text_field :roomtime %> 分<br/>
+  <%= f.submit %>
+<% end -%>
+  

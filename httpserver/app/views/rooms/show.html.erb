@@ -1,0 +1,20 @@
+<% @page_title = @topic.title + "に関する議論" -%>
+
+<%= @room.finish_at %>
+
+<h2>参加者</h2>
+<section>
+<% @room.users.each do |user| -%>
+  <%= content_tag(:article, log_room_user(@room, user)) %>
+<% end -%>
+</section>
+
+<h2>議論</h2>
+<section id="messages">
+  <% @room.activities.each do |a| -%>
+    <%= content_tag(:article, log_message(a)) %>
+  <% end -%>
+</section>
+
+<!-- <a href="http://twitter.com/share" class="twitter-share-button" data-count="horizontal" data-via="takeshi_nishida" data-lang="ja">ツイート</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script> -->
+<%= link_to 'InterPerspective でこの議題について議論する', @topic %>

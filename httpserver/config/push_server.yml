@@ -1,0 +1,11 @@
+development:
+  :host: localhost
+  :port: 15001
+  :public_host: localhost
+  :public_port: 15001
+
+production:
+  :host: localhost
+  :port: 15001
+  :public_host: 133.30.244.48
+  :public_port: 15001

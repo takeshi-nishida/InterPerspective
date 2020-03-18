@@ -1,0 +1,13 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+nishida1:
+  login: nishida1
+  password_salt: <%= salt = Authlogic::Random.hex_token %>
+  crypted_password: <%= Authlogic::CryptoProviders::Sha512.encrypt("nishida1" + salt) %>
+  persistence_token: <%= Authlogic::Random.hex_token %>
+
+nishida2:
+  login: nishida2
+  password_salt: <%= salt = Authlogic::Random.hex_token %>
+  crypted_password: <%= Authlogic::CryptoProviders::Sha512.encrypt("nishida2" + salt) %>
+  persistence_token: <%= Authlogic::Random.hex_token %>
